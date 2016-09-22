@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:scaleType="centerInside"
+        android:transitionName="@string/shared_element_name"
         />
 
     <CheckBox

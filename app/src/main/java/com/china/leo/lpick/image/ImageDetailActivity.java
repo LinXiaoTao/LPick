@@ -1,6 +1,7 @@
 package com.china.leo.lpick.image;
 
-import android.content.Context;
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,7 +9,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SnapHelper;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,15 +64,29 @@ public class ImageDetailActivity extends BaseActivity
     /**
      * 打开详情
      */
-    public static void openImgDetail(Context context, ArrayList<PickModel> sources, ArrayList<PickModel> pick, int index, int maxPickCount)
+    public static void openImgDetail(Activity activity, ArrayList<PickModel> sources,
+                                     ArrayList<PickModel> pick,
+                                     int index,
+                                     int maxPickCount,
+                                     View shareView)
     {
         Intent intent = new Intent();
-        intent.setClass(context, ImageDetailActivity.class);
+        intent.setClass(activity, ImageDetailActivity.class);
         intent.putParcelableArrayListExtra(SOURCE_KEY, sources);
         intent.putParcelableArrayListExtra(PICK_SOUCRE_KEY, pick);
         intent.putExtra(SELECT_INDEX, index);
-        intent.putExtra(MAX_PICK_COUNT_KEY,maxPickCount);
-        context.startActivity(intent);
+        intent.putExtra(MAX_PICK_COUNT_KEY, maxPickCount);
+        ActivityOptions options = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+        {
+            options = ActivityOptions.makeSceneTransitionAnimation(activity,
+                    shareView,
+                    activity.getString(R.string.shared_element_name));
+        }
+        if (options != null)
+            activity.startActivity(intent, options.toBundle());
+        else
+            activity.startActivity(intent);
     }
 
 
@@ -109,7 +123,8 @@ public class ImageDetailActivity extends BaseActivity
         {
             Intent intent = new Intent(DETAIL_ACTION);
             intent.putParcelableArrayListExtra(PICK_SOUCRE_KEY, mPickImage);
-            intent.putParcelableArrayListExtra(SOURCE_KEY,mImageSource);
+            intent.putParcelableArrayListExtra(SOURCE_KEY, mImageSource);
+            intent.putExtra(SELECT_INDEX, mCurrentIndex);
             sendLocalBroadcast(intent);
         }
         super.onDestroy();
@@ -133,16 +148,35 @@ public class ImageDetailActivity extends BaseActivity
         mImageSource = getIntent().getParcelableArrayListExtra(SOURCE_KEY);
         mPickImage = getIntent().getParcelableArrayListExtra(PICK_SOUCRE_KEY);
         mCurrentIndex = getIntent().getIntExtra(SELECT_INDEX, 0);
-        mMaxPickCount = getIntent().getIntExtra(MAX_PICK_COUNT_KEY,MAX_PICK_COUNT);
+        mMaxPickCount = getIntent().getIntExtra(MAX_PICK_COUNT_KEY, MAX_PICK_COUNT);
+
     }
 
     private void initRecyclerView()
     {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        SnapHelper snapHelper = new LinearSnapHelper();
+        final LinearSnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(mRecyclerView);
         mRecyclerView.setAdapter(mAdapter = new DetailAdapter());
         mRecyclerView.scrollToPosition(mCurrentIndex);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
+        {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState)
+            {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE)
+                {
+                    View view = null;
+                    //滚动停止
+                    if ((view = snapHelper.findSnapView(mRecyclerView
+                                    .getLayoutManager())).getTag(R.string.tag_data) != null)
+                    {
+                        mIsChance = true;
+                        mCurrentIndex = (int) view.getTag(R.string.tag_data);
+                    }
+                }
+            }
+        });
     }
 
 
@@ -173,6 +207,7 @@ public class ImageDetailActivity extends BaseActivity
                     Picasso.with(holder.mPhotoView.getContext())
                             .load(new File(model.mImgPath))
                             .fit()
+                            .noFade()
                             .centerInside()
                             .into(holder.mPhotoView);
                 }
@@ -185,6 +220,9 @@ public class ImageDetailActivity extends BaseActivity
                         handlePickState(holder, model);
                     }
                 });
+
+                holder.itemView
+                        .setTag(R.string.tag_data, position);
             }
         }
 
@@ -237,7 +275,7 @@ public class ImageDetailActivity extends BaseActivity
         public DetailHolder(View itemView)
         {
             super(itemView);
-            mPhotoView = (PhotoView) itemView.findViewById(R.id.imgDetail);
+            mPhotoView = (PhotoView) itemView.findViewById(R.id.item_img);
             mCheckBox = (CheckBox) itemView.findViewById(R.id.btnPick);
         }
 

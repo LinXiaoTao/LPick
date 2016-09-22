@@ -56,8 +56,6 @@ public class PickImgSimpleActivity extends AppCompatActivity
     public void onClick()
     {
         LPick.getInstance()
-                .withPickCount(5)
-                .withSpanCount(4)
                 .pick(this,REQUEST_CODE);
     }
 

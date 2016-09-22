@@ -5,7 +5,8 @@
              android:orientation="vertical">
 
     <uk.co.senab.photoview.PhotoView
-        android:id="@+id/imgDetail"
+        android:id="@+id/item_img"
+        android:transitionName="@string/shared_element_name"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

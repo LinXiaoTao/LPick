@@ -78,7 +78,7 @@ public final class LPick
     public void pick(Activity activity, int requestCode)
     {
         Intent intent = new Intent(activity, PickActivity.class);
-        intent.putExtras(build());
+        intent.putExtras(pickBuild());
         activity.startActivityForResult(intent, requestCode);
     }
 
@@ -89,7 +89,6 @@ public final class LPick
      */
     public void crop(Activity activity, Uri source, Uri destination)
     {
-
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -98,8 +97,8 @@ public final class LPick
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    //配置参数
-    private Bundle build()
+    //配置选择器参数
+    private Bundle pickBuild()
     {
         Bundle bundle = new Bundle();
         bundle.putInt(Constances.MAX_PICK_COUNT_KEY,mPickCount > 0 ? mPickCount : Constances.MAX_PICK_COUNT);
@@ -107,5 +106,6 @@ public final class LPick
         bundle.putInt(Constances.SPAN_COUNT_KEY,mSpanCount > 0 ? mSpanCount : Constances.SPAN_COUNT);
         return bundle;
     }
+
 
 }

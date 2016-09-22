@@ -298,6 +298,10 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
             mPickModelList = intent.getParcelableArrayListExtra(PICK_SOUCRE_KEY);
             refreshButton();
             updateNotifyData(oldData, mImageSource);
+            mLoader.reset();
+//            if (intent.hasExtra(SELECT_INDEX))
+//                mRecyclerView.getRecyclerView()
+//                        .scrollToPosition(intent.getIntExtra(SELECT_INDEX, 0));
         }
     }
 
@@ -642,7 +646,8 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
                             ArrayList<PickModel> data = new ArrayList<>(mImageSource);
                             data.remove(0);
                             ImageDetailActivity
-                                    .openImgDetail(PickActivity.this, data, mPickModelList, position - 1, mMaxPickCount);
+                                    .openImgDetail(PickActivity.this, data, mPickModelList,
+                                            position - 1, mMaxPickCount, holder.mImageView);
                         }
                     }
                 });

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">LPick</string>
+    <string name="shared_element_name">imageview_name</string>
+    <string name="tag_data">current_index</string>
 </resources>
