@@ -2,7 +2,9 @@ package com.china.leo.lpick;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -15,11 +17,15 @@ import android.widget.ImageView;
 import com.china.leo.lpick.image.Constances;
 import com.china.leo.lpick.image.LPick;
 import com.china.leo.lpick.image.model.PickModel;
+import com.orhanobut.logger.Logger;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -67,6 +73,10 @@ public class PickImgSimpleActivity extends AppCompatActivity
         {
             mPickModelList = data.getParcelableArrayListExtra(Constances.PICK_SOUCRE_KEY);
             mAdapter.notifyDataSetChanged();
+        }else if (resultCode == RESULT_OK && requestCode == LPick.REQUEST_CROP)
+        {
+            Uri output = LPick.getOutput(data);
+            Logger.d("裁剪结果:" + output.getPath());
         }
     }
 
@@ -85,6 +95,13 @@ public class PickImgSimpleActivity extends AppCompatActivity
     {
         mRecyclerViewList.setLayoutManager(new GridLayoutManager(this,SPAN_COUNT));
         mRecyclerViewList.setAdapter(mAdapter = new ImageAdapter());
+    }
+
+    private Uri createUriSave()
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA);
+        String filename = String.format("IMG_%s.jpg", dateFormat.format(new Date()));
+        return Uri.fromFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),filename));
     }
 
     private class ImageAdapter extends RecyclerView.Adapter<ImageHolder>
@@ -111,12 +128,23 @@ public class PickImgSimpleActivity extends AppCompatActivity
         {
             if (mPickModelList.size() > position)
             {
-                PickModel model = mPickModelList.get(position);
+                final PickModel model = mPickModelList.get(position);
                 Picasso
                         .with(PickImgSimpleActivity.this)
                         .load(new File(model.mImgPath))
                         .fit()
                         .into(holder.mImageView);
+                holder.itemView
+                        .setOnClickListener(new View.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                LPick.getInstance()
+                                        .useSourceImageAspectRatio()
+                                        .crop(PickImgSimpleActivity.this,Uri.fromFile(new File(model.mImgPath)),createUriSave());
+                            }
+                        });
             }
         }
 

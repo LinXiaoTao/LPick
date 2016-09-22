@@ -13,6 +13,8 @@ public final class Constances
     public final static int SPAN_COUNT = 3;
     public final static int PAGER_SIZE = 21;
     public final static String PICK_COUNT_TEXT = "完成(%d/%d)";
+    public final static int MAX_WIDTH = 800;
+    public final static int MAX_HEIGHT = 800;
 
     //key常量
     public static final String SOURCE_KEY = "source_key";
