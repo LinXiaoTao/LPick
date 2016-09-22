@@ -34,7 +34,6 @@ import com.china.leo.lpick.image.utils.MediaScanner;
 import com.china.leo.lpick.image.utils.MediaUtils;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
-import com.orhanobut.logger.Logger;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -272,7 +271,7 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
     @Override
     public void onLoaderReset(Loader<Cursor> loader)
     {
-        Logger.d("onLoaderReset");
+//        Logger.d("onLoaderReset");
     }
 
     @Override
