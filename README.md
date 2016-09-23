@@ -47,6 +47,10 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data)
 #### 重要
 关于图片的压缩，因为没有相关的知识，所有都是按不超过最大尺寸，等比例缩放来压缩图片。如果有好建议，请提issues,谢谢
 ```
+//裁剪载入最大尺寸
+public final static int MAX_CROP_SIZE = 1500;
+//裁剪输出最大尺寸
+public final static int MAX_RESULT_SIZE = 1000;
 //小图最大尺寸
 public final static int MAX_THUMB_SIZE = 300;
 //大图最大尺寸

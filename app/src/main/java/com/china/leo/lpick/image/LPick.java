@@ -49,7 +49,15 @@ public final class LPick
     private LPick()
     {
         mOptions = new UCrop.Options();
+        //UCrop默认参数
+        configDefalut();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // 选择-配置参数
+    //
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * 设置最多可选数量
@@ -87,6 +95,12 @@ public final class LPick
         return INSTANCE;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // 裁剪-配置参数
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * x , y 裁剪比例
      *
@@ -123,6 +137,154 @@ public final class LPick
         mOptions.useSourceImageAspectRatio();
         return INSTANCE;
     }
+
+    /**
+     * 是否隐藏底部控制器
+     *
+     * @param hide
+     * @return
+     */
+    public LPick setHideBottomControls(boolean hide)
+    {
+        mOptions.setHideBottomControls(hide);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置标题文字
+     *
+     * @param title
+     * @return
+     */
+    public LPick setToolbarTitle(String title)
+    {
+        mOptions.setToolbarTitle(title);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置Logo颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setLogoColor(int color)
+    {
+        mOptions.setLogoColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置选中控件颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setActiveWidgetColor(int color)
+    {
+        mOptions.setActiveWidgetColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置ToolBar上控件的文本颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setToolbarWidgetColor(int color)
+    {
+        mOptions.setToolbarWidgetColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置状态栏颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setStatusBarColor(int color)
+    {
+        mOptions.setStatusBarColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置Toolbar的背景颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setToolbarColor(int color)
+    {
+        mOptions.setToolbarColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 是否显示网格线
+     *
+     * @param showCropGrid
+     * @return
+     */
+    public LPick setShowCropGrid(boolean showCropGrid)
+    {
+        mOptions.setShowCropGrid(showCropGrid);
+        return INSTANCE;
+    }
+
+    /**
+     * 是否显示矩阵框
+     *
+     * @param isShowFrme
+     * @return
+     */
+    public LPick setShowCropFrame(boolean isShowFrme)
+    {
+        mOptions.setShowCropFrame(isShowFrme);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置矩阵框的颜色
+     *
+     * @param color
+     * @return
+     */
+    public LPick setCropFrameColor(int color)
+    {
+        mOptions.setCropFrameColor(color);
+        return INSTANCE;
+    }
+
+    /**
+     * 是否显示圆形变暗层
+     *
+     * @param isCircle
+     * @return
+     */
+    public LPick setCircleDimmedLayer(boolean isCircle)
+    {
+        mOptions.setCircleDimmedLayer(isCircle);
+        return INSTANCE;
+    }
+
+    /**
+     * 设置读取图片的最大尺寸
+     *
+     * @param maxBitmapSize
+     * @return
+     */
+    public LPick setMaxBitmapSize(int maxBitmapSize)
+    {
+        mOptions.setMaxBitmapSize(maxBitmapSize);
+        return INSTANCE;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////
+
 
     /**
      * 开启选择图片
@@ -178,10 +340,11 @@ public final class LPick
     }
 
     //Ucrop默认配置
-    private void configDefalut(Activity activity)
+    private void configDefalut()
     {
         mOptions.useSourceImageAspectRatio();
-        mOptions.withMaxResultSize(Constances.MAX_WIDTH,Constances.MAX_HEIGHT);
+        mOptions.setMaxBitmapSize(Constances.MAX_CROP_SIZE);
+        mOptions.withMaxResultSize(Constances.MAX_RESULT_SIZE, Constances.MAX_RESULT_SIZE);
     }
 
 }

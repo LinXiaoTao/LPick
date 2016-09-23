@@ -225,12 +225,12 @@ public class ImageDetailActivity extends BaseActivity
                                     BitmapFactory.Options options = new BitmapFactory.Options();
                                     options.inJustDecodeBounds = true;
                                     BitmapFactory.decodeFile(model.mImgPath, options);
-                                    Logger.d("原始图片大小:(%d,%d),%fMB", options.outWidth, options.outHeight
-                                            , (float) options.outHeight * options.outWidth * 4 / 1024 / 1024);
+//                                    Logger.d("原始图片大小:(%d,%d),%fMB", options.outWidth, options.outHeight
+//                                            , (float) options.outHeight * options.outWidth * 4 / 1024 / 1024);
                                     int inSampleSize = BitmapLoadUtils.calculateInSampleSize(options
                                             , Constances.MAX_BIG_SIZE, Constances.MAX_BIG_SIZE);
 
-                                    Logger.d("缩放比例为%d", inSampleSize);
+//                                    Logger.d("缩放比例为%d", inSampleSize);
                                     subscriber.onNext(new Point(options.outWidth / inSampleSize
                                             , options.outHeight / inSampleSize));
                                     subscriber.onCompleted();
@@ -252,7 +252,7 @@ public class ImageDetailActivity extends BaseActivity
                                                 @Override
                                                 public void onSuccess()
                                                 {
-                                                    showBitmapInfo(holder.mPhotoView);
+//                                                    showBitmapInfo(holder.mPhotoView);
                                                 }
 
                                                 @Override

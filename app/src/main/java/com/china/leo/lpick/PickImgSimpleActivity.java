@@ -2,10 +2,13 @@ package com.china.leo.lpick;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +21,7 @@ import com.china.leo.lpick.image.Constances;
 import com.china.leo.lpick.image.LPick;
 import com.china.leo.lpick.image.model.PickModel;
 import com.orhanobut.logger.Logger;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -80,7 +84,8 @@ public class PickImgSimpleActivity extends AppCompatActivity
         {
             //获取裁剪结果
             Uri output = LPick.getOutput(data);
-            Logger.d("裁剪结果:" + output.getPath());
+            mImageView.setImageURI(output);
+            showBitmapInfo(mImageView);
         }
     }
 
@@ -108,6 +113,14 @@ public class PickImgSimpleActivity extends AppCompatActivity
         return Uri.fromFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),filename));
     }
 
+    private void showBitmapInfo(ImageView imageView)
+    {
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Logger.d("图片大小:%f,宽:%d,高:%d", (float) bitmap.getAllocationByteCount() / 1024 / 1024
+                , bitmap.getWidth(), bitmap.getHeight());
+    }
+
     private class ImageAdapter extends RecyclerView.Adapter<ImageHolder>
     {
 
@@ -128,7 +141,7 @@ public class PickImgSimpleActivity extends AppCompatActivity
         }
 
         @Override
-        public void onBindViewHolder(ImageHolder holder, int position)
+        public void onBindViewHolder(final ImageHolder holder, int position)
         {
             if (mPickModelList.size() > position)
             {
@@ -137,7 +150,20 @@ public class PickImgSimpleActivity extends AppCompatActivity
                         .with(PickImgSimpleActivity.this)
                         .load(new File(model.mImgPath))
                         .fit()
-                        .into(holder.mImageView);
+                        .into(holder.mImageView, new Callback()
+                        {
+                            @Override
+                            public void onSuccess()
+                            {
+                                showBitmapInfo(holder.mImageView);
+                            }
+
+                            @Override
+                            public void onError()
+                            {
+
+                            }
+                        });
                 holder.itemView
                         .setOnClickListener(new View.OnClickListener()
                         {
@@ -145,7 +171,9 @@ public class PickImgSimpleActivity extends AppCompatActivity
                             public void onClick(View v)
                             {
                                 LPick.getInstance()
-                                        .useSourceImageAspectRatio()
+                                        .setStatusBarColor(ResourcesCompat.getColor(PickImgSimpleActivity.this.getResources(),R.color.colorPrimaryDark,null))
+                                        .setToolbarColor(ResourcesCompat.getColor(PickImgSimpleActivity.this.getResources(),R.color.colorPrimary,null))
+                                        .setActiveWidgetColor(ResourcesCompat.getColor(PickImgSimpleActivity.this.getResources(),R.color.colorPrimary,null))
                                         .crop(PickImgSimpleActivity.this,Uri.fromFile(new File(model.mImgPath)),createUriSave());
                             }
                         });

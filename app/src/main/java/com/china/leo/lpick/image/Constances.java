@@ -13,8 +13,10 @@ public final class Constances
     public final static int SPAN_COUNT = 3;
     public final static int PAGER_SIZE = 21;
     public final static String PICK_COUNT_TEXT = "完成(%d/%d)";
-    public final static int MAX_WIDTH = 800;
-    public final static int MAX_HEIGHT = 800;
+    //裁剪载入最大尺寸
+    public final static int MAX_CROP_SIZE = 1500;
+    //裁剪输出最大尺寸
+    public final static int MAX_RESULT_SIZE = 1000;
     //小图最大尺寸
     public final static int MAX_THUMB_SIZE = 300;
     //大图最大尺寸

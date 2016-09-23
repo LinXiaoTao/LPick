@@ -626,7 +626,7 @@ public class PickActivity extends BaseActivity
                                                     @Override
                                                     public void onSuccess()
                                                     {
-                                                        showBitmapInfo(holder.mImageView);
+//                                                        showBitmapInfo(holder.mImageView);
                                                     }
 
                                                     @Override
