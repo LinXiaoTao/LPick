@@ -169,7 +169,7 @@ public class ImageDetailActivity extends BaseActivity
                     View view = null;
                     //滚动停止
                     if ((view = snapHelper.findSnapView(mRecyclerView
-                                    .getLayoutManager())).getTag(R.string.tag_data) != null)
+                            .getLayoutManager())).getTag(R.string.tag_data) != null)
                     {
                         mIsChance = true;
                         mCurrentIndex = (int) view.getTag(R.string.tag_data);
@@ -207,7 +207,6 @@ public class ImageDetailActivity extends BaseActivity
                     Picasso.with(holder.mPhotoView.getContext())
                             .load(new File(model.mImgPath))
                             .fit()
-                            .noFade()
                             .centerInside()
                             .into(holder.mPhotoView);
                 }

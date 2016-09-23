@@ -2,13 +2,14 @@ package com.china.leo.lpick.image.utils;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
-import android.support.v4.content.CursorLoader;
 import android.text.TextUtils;
 
 import com.china.leo.lpick.image.model.FolderModel;
+import com.china.leo.lpick.image.model.PickModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,45 +41,67 @@ public final class MediaUtils
     }
 
 
-    public CursorLoader createQueryImageLoad(int pager, int pagerSize, String imageId)
+    public Observable<List<PickModel>> queryImageModel(final int pager,final int pagerSize, final String bucketId)
     {
-        int offset = (pager - 1) * pagerSize;
-        List<String> projection = new ArrayList<>();
-        projection.add(MediaStore.Images.Media._ID);
-        projection.add(MediaStore.Images.Media.TITLE);
-        projection.add(MediaStore.Images.Media.DATA);
-        projection.add(MediaStore.Images.Media.BUCKET_ID);
-        projection.add(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
-        projection.add(MediaStore.Images.Media.MIME_TYPE);
-        projection.add(MediaStore.Images.Media.DATE_ADDED);
-        projection.add(MediaStore.Images.Media.DATE_MODIFIED);
-        projection.add(MediaStore.Images.Media.LATITUDE);
-        projection.add(MediaStore.Images.Media.LONGITUDE);
-        projection.add(MediaStore.Images.Media.ORIENTATION);
-        projection.add(MediaStore.Images.Media.SIZE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-        {
-            projection.add(MediaStore.Images.Media.WIDTH);
-            projection.add(MediaStore.Images.Media.HEIGHT);
-        }
+        return Observable
+                .create(new Observable.OnSubscribe<List<PickModel>>()
+                {
+                    @Override
+                    public void call(Subscriber<? super List<PickModel>> subscriber)
+                    {
+                        int offset = (pager - 1) * pagerSize;
+                        List<String> projection = new ArrayList<>();
+                        projection.add(MediaStore.Images.Media._ID);
+                        projection.add(MediaStore.Images.Media.TITLE);
+                        projection.add(MediaStore.Images.Media.DATA);
+                        projection.add(MediaStore.Images.Media.BUCKET_ID);
+                        projection.add(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+                        projection.add(MediaStore.Images.Media.MIME_TYPE);
+                        projection.add(MediaStore.Images.Media.DATE_ADDED);
+                        projection.add(MediaStore.Images.Media.DATE_MODIFIED);
+                        projection.add(MediaStore.Images.Media.LATITUDE);
+                        projection.add(MediaStore.Images.Media.LONGITUDE);
+                        projection.add(MediaStore.Images.Media.ORIENTATION);
+                        projection.add(MediaStore.Images.Media.SIZE);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                        {
+                            projection.add(MediaStore.Images.Media.WIDTH);
+                            projection.add(MediaStore.Images.Media.HEIGHT);
+                        }
 
-        String selection = null;
-        String[] selectionArgs = null;
+                        String selection = null;
+                        String[] selectionArgs = null;
 
-        if (!TextUtils.isEmpty(imageId))
-        {
-            selection = MediaStore.Images.Media._ID + "=?";
-            selectionArgs = new String[]{imageId};
-        }
+                        if (!TextUtils.isEmpty(bucketId))
+                        {
+                            selection = MediaStore.Images.Media.BUCKET_ID + "=?";
+                            selectionArgs = new String[]{bucketId};
+                        }
 
-        CursorLoader loader = new CursorLoader(mContext);
-        loader.setSelection(selection);
-        loader.setSelectionArgs(selectionArgs);
-        loader.setProjection(projection.toArray(new String[projection.size()]));
-        loader.setUri(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        loader.setSortOrder(MediaStore.Images.Media.DATE_ADDED + " DESC LIMIT " + pagerSize + " OFFSET " + offset);
+                        Cursor cursor = mContext.getContentResolver()
+                                .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                                        , projection.toArray(new String[projection.size()]),
+                                        selection, selectionArgs,
+                                        MediaStore.Images.Media.DATE_ADDED + " DESC LIMIT " + pagerSize + " OFFSET " + offset);
+                        List<PickModel> data = new ArrayList<PickModel>();
 
-        return loader;
+                        if (cursor != null && cursor.getCount() > 0)
+                        {
+                            cursor.moveToFirst();
+                            do
+                            {
+                                data.add(handleModel(cursor));
+
+                            }while (cursor.moveToNext());
+                        }
+
+                        subscriber.onNext(data);
+                        subscriber.onCompleted();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
     }
 
     public Observable<List<FolderModel>> queryImageFolder()
@@ -172,12 +195,86 @@ public final class MediaUtils
 
     }
 
+    /**
+     * 根据图片orgid获取缩略图
+     *
+     * @param orgid
+     * @param type
+     * @return
+     */
+    public String getThumbnails(long orgid, int type)
+    {
+        String path = "";
+        Cursor cursor = null;
+        try
+        {
+            cursor = MediaStore.Images.Thumbnails
+                    .queryMiniThumbnail(mContext.getContentResolver(), orgid, type, null);
+            if (cursor != null && cursor.getCount() > 0)
+            {
+                cursor.moveToFirst();
+                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        } finally
+        {
+            if (cursor != null)
+            {
+                cursor.close();
+                cursor = null;
+            }
+        }
+
+        return path;
+    }
+
+    /**
+     * 根据图片path获取缩略图
+     *
+     * @param orgid
+     * @param type
+     * @return
+     */
+    public Bitmap getThumbnail(long orgid, int type)
+    {
+        Bitmap result = null;
+        Cursor cursor = null;
+        try
+        {
+            result = MediaStore.Images.Thumbnails
+                    .getThumbnail(mContext.getContentResolver(), orgid, type, null);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // private method
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
     private FolderModel handleFolder(Cursor cursor)
     {
         FolderModel model = new FolderModel();
         model.mFolderId = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_ID));
         model.mTitle = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
         model.mTitleImg = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        return model;
+    }
+
+    private PickModel handleModel(Cursor cursor)
+    {
+        PickModel model = new PickModel();
+        model.mImgPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        model.mOrigId = cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media._ID));
+        model.mIsPick = false;
         return model;
     }
 }

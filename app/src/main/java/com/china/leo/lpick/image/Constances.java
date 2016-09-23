@@ -15,6 +15,9 @@ public final class Constances
     public final static String PICK_COUNT_TEXT = "完成(%d/%d)";
     public final static int MAX_WIDTH = 800;
     public final static int MAX_HEIGHT = 800;
+    //小图最大尺寸
+    public final static int MAX_THUMB_SIZE = 180;
+
 
     //key常量
     public static final String SOURCE_KEY = "source_key";

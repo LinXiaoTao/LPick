@@ -13,8 +13,7 @@ public class PickModel implements Parcelable
 {
     public String mImgPath;
     public boolean mIsPick;
-    //缩略图
-    public String mThumbnails;
+    public long mOrigId = -1;
 
     @Override
     public boolean equals(Object o)
@@ -42,7 +41,7 @@ public class PickModel implements Parcelable
     {
         dest.writeString(this.mImgPath);
         dest.writeByte(this.mIsPick ? (byte) 1 : (byte) 0);
-        dest.writeString(this.mThumbnails);
+        dest.writeLong(this.mOrigId);
     }
 
     public PickModel()
@@ -53,7 +52,7 @@ public class PickModel implements Parcelable
     {
         this.mImgPath = in.readString();
         this.mIsPick = in.readByte() != 0;
-        this.mThumbnails = in.readString();
+        this.mOrigId = in.readLong();
     }
 
     public static final Creator<PickModel> CREATOR = new Creator<PickModel>()

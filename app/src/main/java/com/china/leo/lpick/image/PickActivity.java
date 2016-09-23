@@ -4,15 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.GridLayoutManager;
@@ -52,6 +47,7 @@ import permissions.dispatcher.RuntimePermissions;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 import static com.china.leo.lpick.image.Constances.DETAIL_ACTION;
@@ -71,7 +67,7 @@ import static com.china.leo.lpick.image.Constances.SPAN_COUNT_KEY;
  */
 
 @RuntimePermissions
-public class PickActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<Cursor>
+public class PickActivity extends BaseActivity
 {
     @BindView(R.id.txtTitle)
     TextView mTxtTitle;
@@ -85,18 +81,14 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
     private PickImageAdapter mPickImageAdapter;
     private ArrayList<PickModel> mImageSource = new ArrayList<>();
     private int mPager = 1;
-    private Loader mLoader;
-    private CursorLoader mCursorLoader;
     private boolean mIsShowDialog = false;
     private File mSaveFile = null;
     private MediaScanner mMediaScanner;
+    private String mFolderId = "";
 
-    /**
-     * 已选择的图片
-     */
+    //已选择的图片
     private ArrayList<PickModel> mPickModelList = new ArrayList<>();
     private FolderListDialog mFolderListDialog;
-    private final static int LOADER_IMAGE = 0;
     private final static int REQUEST_CODE = 0;
 
     private int mSpanCount = SPAN_COUNT;
@@ -110,19 +102,7 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
         @Override
         public void onMoreAsked(int overallItemsCount, int itemsBeforeMore, int maxLastVisiblePosition)
         {
-            if (mCursorLoader != null && !mLoader.isStarted())
-            {
-                int offset = (mPager - 1) * mPagerSize;
-                mCursorLoader.setSortOrder(MediaStore.Images.Media.DATE_ADDED + " DESC LIMIT " + mPagerSize + " OFFSET " + offset);
-                mLoader.reset();
-                mLoader.startLoading();
-            } else
-            {
-                if (mRecyclerView.isLoadingMore())
-                {
-                    mRecyclerView.setLoadingMore(false);
-                }
-            }
+            loadMoreData(mFolderId);
         }
     };
 
@@ -133,23 +113,13 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
         public void onNotifyData(String folderId, String title)
         {
             mBtnOpenFolder.setText(title);
-            mRecyclerView.setOnMoreListener(mOnMoreListener);
             mImageSource.clear();
             addTakeImage();
             mPager = 1;
-            int offset = (mPager - 1) * mPagerSize;
-            if (!TextUtils.isEmpty(folderId))
-            {
-                mCursorLoader.setSelection(MediaStore.Images.Media.BUCKET_ID + "=?");
-                mCursorLoader.setSelectionArgs(new String[]{folderId});
-            } else
-            {
-                mCursorLoader.setSelection("");
-                mCursorLoader.setSelectionArgs(null);
-            }
-            mCursorLoader.setSortOrder(MediaStore.Images.Media.DATE_ADDED + " DESC LIMIT " + mPagerSize + " OFFSET " + offset);
-            mLoader.reset();
-            mLoader.startLoading();
+            mFolderId = folderId;
+
+            //开启加载更多
+            enableLoadingMore(true);
         }
     };
 
@@ -223,55 +193,10 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args)
+    protected void onResume()
     {
-        if (id == LOADER_IMAGE)
-        {
-            return mCursorLoader = MediaUtils.with(getApplicationContext())
-                    .createQueryImageLoad(mPager, PAGER_SIZE, "");
-        }
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data)
-    {
-        if (data != null && data.getCount() > 0)
-        {
-            List<PickModel> oldData = mPickImageAdapter.getSourceData();
-            data.moveToFirst();
-            do
-            {
-                mImageSource.add(handleModel(data));
-            } while (data.moveToNext());
-            mPager++;
-            updateNotifyData(oldData, mImageSource);
-        } else
-        {
-            mRecyclerView.setOnMoreListener(null);
-//            Snackbar.make(mRecyclerView, "没有更多了", Snackbar.LENGTH_SHORT)
-//                    .show();
-        }
-
-        mLoader.stopLoading();
-
-        if (mRecyclerView.isLoadingMore())
-            mRecyclerView.setLoadingMore(false);
-        mRecyclerView.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                mRecyclerView.hideMoreProgress();
-            }
-        }, 500);
-
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader)
-    {
-//        Logger.d("onLoaderReset");
+        initFolderDialog();
+        super.onResume();
     }
 
     @Override
@@ -298,7 +223,6 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
             mPickModelList = intent.getParcelableArrayListExtra(PICK_SOUCRE_KEY);
             refreshButton();
             updateNotifyData(oldData, mImageSource);
-            mLoader.reset();
 //            if (intent.hasExtra(SELECT_INDEX))
 //                mRecyclerView.getRecyclerView()
 //                        .scrollToPosition(intent.getIntExtra(SELECT_INDEX, 0));
@@ -315,10 +239,7 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
     void init()
     {
         getBuildConfig(getIntent().getExtras());
-
-        initLoader();
         initRecyclerView();
-        initFolderDialog();
         mMediaScanner = new MediaScanner(this);
     }
 
@@ -403,12 +324,7 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
         mRecyclerView.setAdapter(mPickImageAdapter = new PickImageAdapter(mImageSource));
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, mSpanCount));
         mRecyclerView.setOnMoreListener(mOnMoreListener);
-    }
-
-    private void initLoader()
-    {
-        mLoader = getSupportLoaderManager()
-                .initLoader(LOADER_IMAGE, null, this);
+        mRecyclerView.setNumberBeforeMoreIsCalled(mSpanCount);
     }
 
     private void initFolderDialog()
@@ -416,9 +332,8 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
         if (mFolderListDialog == null)
         {
             mFolderListDialog = new FolderListDialog(this);
+            mFolderListDialog.setCallback(mNotifyDataCallback);
         }
-
-        mFolderListDialog.setCallback(mNotifyDataCallback);
     }
 
     /**
@@ -500,12 +415,83 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
             mBtnOk.setText("完成");
     }
 
+    //添加拍照
     private void addTakeImage()
     {
         PickModel takeModel = new PickModel();
         takeModel.mImgPath = "";
         takeModel.mIsPick = false;
         mImageSource.add(0, takeModel);
+    }
+
+    /**
+     * 加载更多数据
+     *
+     * @param bucketId 文件夹id
+     */
+    private void loadMoreData(String bucketId)
+    {
+        MediaUtils
+                .with(this)
+                .queryImageModel(mPager, mPagerSize, bucketId)
+                .doOnNext(new Action1<List<PickModel>>()
+                {
+                    @Override
+                    public void call(List<PickModel> pickModels)
+                    {
+                        if (pickModels == null && pickModels.isEmpty())
+                        {
+                            //关闭加载更多
+                            enableLoadingMore(false);
+                        }
+                    }
+                })
+                .subscribe(new Subscriber<List<PickModel>>()
+                {
+                    @Override
+                    public void onCompleted()
+                    {
+                        mPager++;
+                        List<PickModel> oldData = mPickImageAdapter.getSourceData();
+                        updateNotifyData(oldData, mImageSource);
+                        closeLoadingMore();
+                    }
+
+                    @Override
+                    public void onError(Throwable e)
+                    {
+                        closeLoadingMore();
+                    }
+
+                    @Override
+                    public void onNext(List<PickModel> pickModels)
+                    {
+                        mImageSource.addAll(pickModels);
+                    }
+                });
+    }
+
+    //关闭加载更多
+    private void closeLoadingMore()
+    {
+        mRecyclerView.setLoadingMore(false);
+        mRecyclerView.hideMoreProgress();
+    }
+
+    /**
+     * 开启/关闭 加载更多
+     *
+     * @param isEnable
+     */
+    private void enableLoadingMore(boolean isEnable)
+    {
+        if (mRecyclerView != null)
+        {
+            if (!isEnable)
+                mRecyclerView.removeMoreListener();
+            else
+                mRecyclerView.setOnMoreListener(mOnMoreListener);
+        }
     }
 
     private void openFolderDialog()
@@ -598,7 +584,7 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
                 {
                     Picasso.with(holder.mImageView.getContext())
                             .load(new File(pickModel.mImgPath))
-                            .resize(mImageWidth, mImageWidth)
+                            .fit()
                             .centerCrop()
                             .into(holder.mImageView);
                     holder.mCheckBox
@@ -661,14 +647,6 @@ public class PickActivity extends BaseActivity implements LoaderManager.LoaderCa
             return mSourceData.size();
         }
 
-    }
-
-    private PickModel handleModel(Cursor cursor)
-    {
-        PickModel model = new PickModel();
-        model.mImgPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        model.mIsPick = false;
-        return model;
     }
 
     private class PickHolder extends RecyclerView.ViewHolder

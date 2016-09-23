@@ -41,6 +41,8 @@ public class PickImgSimpleActivity extends AppCompatActivity
 {
     @BindView(R.id.recyclerView_list)
     RecyclerView mRecyclerViewList;
+    @BindView(R.id.image)
+    ImageView mImageView;
 
     private static final int SPAN_COUNT = 3;
     private static final int REQUEST_CODE = 0;
