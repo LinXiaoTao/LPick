@@ -16,7 +16,9 @@ public final class Constances
     public final static int MAX_WIDTH = 800;
     public final static int MAX_HEIGHT = 800;
     //小图最大尺寸
-    public final static int MAX_THUMB_SIZE = 180;
+    public final static int MAX_THUMB_SIZE = 300;
+    //大图最大尺寸
+    public final static int MAX_BIG_SIZE = 800;
 
 
     //key常量

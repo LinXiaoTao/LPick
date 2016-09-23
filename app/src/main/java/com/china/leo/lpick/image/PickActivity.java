@@ -4,6 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,7 +33,10 @@ import com.china.leo.lpick.image.utils.MediaScanner;
 import com.china.leo.lpick.image.utils.MediaUtils;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
+import com.orhanobut.logger.Logger;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.yalantis.ucrop.util.BitmapLoadUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -439,7 +446,7 @@ public class PickActivity extends BaseActivity
                     @Override
                     public void call(List<PickModel> pickModels)
                     {
-                        if (pickModels == null && pickModels.isEmpty())
+                        if (pickModels == null || pickModels.isEmpty())
                         {
                             //关闭加载更多
                             enableLoadingMore(false);
@@ -582,16 +589,61 @@ public class PickActivity extends BaseActivity
                 final PickModel pickModel = mSourceData.get(position);
                 if (!TextUtils.isEmpty(pickModel.mImgPath))
                 {
-                    Picasso.with(holder.mImageView.getContext())
-                            .load(new File(pickModel.mImgPath))
-                            .fit()
-                            .centerCrop()
-                            .into(holder.mImageView);
+                    holder.mImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        Observable
+                                .create(new Observable.OnSubscribe<Point>()
+                                {
+                                    @Override
+                                    public void call(Subscriber<? super Point> subscriber)
+                                    {
+                                        BitmapFactory.Options options = new BitmapFactory.Options();
+                                        options.inJustDecodeBounds = true;
+                                        BitmapFactory.decodeFile(pickModel.mImgPath, options);
+//                                        Logger.d("原始图片大小:(%d,%d),%fMB", options.outWidth, options.outHeight
+//                                                , (float) options.outHeight * options.outWidth * 4 / 1024 / 1024);
+                                        int inSampleSize = BitmapLoadUtils.calculateInSampleSize(options
+                                                , Constances.MAX_THUMB_SIZE, Constances.MAX_THUMB_SIZE);
+
+//                                        Logger.d("缩放比例为%d", inSampleSize);
+                                        subscriber.onNext(new Point(options.outWidth / inSampleSize
+                                                , options.outHeight / inSampleSize));
+                                        subscriber.onCompleted();
+                                    }
+                                })
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Action1<Point>()
+                                {
+                                    @Override
+                                    public void call(Point point)
+                                    {
+                                        Picasso.with(holder.mImageView.getContext())
+                                                .load(new File(pickModel.mImgPath))
+                                                .resize(point.x, point.y)
+                                                .centerCrop()
+                                                .into(holder.mImageView, new Callback()
+                                                {
+                                                    @Override
+                                                    public void onSuccess()
+                                                    {
+                                                        showBitmapInfo(holder.mImageView);
+                                                    }
+
+                                                    @Override
+                                                    public void onError()
+                                                    {
+
+                                                    }
+                                                });
+                                    }
+                                });
+
                     holder.mCheckBox
                             .setVisibility(View.VISIBLE);
 
                 } else
                 {
+                    holder.mImageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                     Picasso.with(holder.mImageView.getContext())
                             .load(R.mipmap.ic_camera)
                             .into(holder.mImageView);
@@ -647,6 +699,14 @@ public class PickActivity extends BaseActivity
             return mSourceData.size();
         }
 
+    }
+
+    private void showBitmapInfo(ImageView imageView)
+    {
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Logger.d("图片大小:%f,宽:%d,高:%d", (float) bitmap.getAllocationByteCount() / 1024 / 1024
+                , bitmap.getWidth(), bitmap.getHeight());
     }
 
     private class PickHolder extends RecyclerView.ViewHolder

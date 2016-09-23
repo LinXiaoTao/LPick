@@ -73,10 +73,12 @@ public class PickImgSimpleActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK)
         {
+            //获取选择的图片
             mPickModelList = data.getParcelableArrayListExtra(Constances.PICK_SOUCRE_KEY);
             mAdapter.notifyDataSetChanged();
         }else if (resultCode == RESULT_OK && requestCode == LPick.REQUEST_CROP)
         {
+            //获取裁剪结果
             Uri output = LPick.getOutput(data);
             Logger.d("裁剪结果:" + output.getPath());
         }

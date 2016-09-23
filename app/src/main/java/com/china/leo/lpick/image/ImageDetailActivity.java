@@ -3,6 +3,10 @@ package com.china.leo.lpick.image;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -19,7 +23,10 @@ import android.widget.TextView;
 
 import com.china.leo.lpick.R;
 import com.china.leo.lpick.image.model.PickModel;
+import com.orhanobut.logger.Logger;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.yalantis.ucrop.util.BitmapLoadUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,6 +34,11 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 import uk.co.senab.photoview.PhotoView;
 
 import static com.china.leo.lpick.image.Constances.DETAIL_ACTION;
@@ -204,11 +216,53 @@ public class ImageDetailActivity extends BaseActivity
                 final PickModel model = mImageSource.get(position);
                 if (!TextUtils.isEmpty(model.mImgPath))
                 {
-                    Picasso.with(holder.mPhotoView.getContext())
-                            .load(new File(model.mImgPath))
-                            .fit()
-                            .centerInside()
-                            .into(holder.mPhotoView);
+                    Observable
+                            .create(new Observable.OnSubscribe<Point>()
+                            {
+                                @Override
+                                public void call(Subscriber<? super Point> subscriber)
+                                {
+                                    BitmapFactory.Options options = new BitmapFactory.Options();
+                                    options.inJustDecodeBounds = true;
+                                    BitmapFactory.decodeFile(model.mImgPath, options);
+                                    Logger.d("原始图片大小:(%d,%d),%fMB", options.outWidth, options.outHeight
+                                            , (float) options.outHeight * options.outWidth * 4 / 1024 / 1024);
+                                    int inSampleSize = BitmapLoadUtils.calculateInSampleSize(options
+                                            , Constances.MAX_BIG_SIZE, Constances.MAX_BIG_SIZE);
+
+                                    Logger.d("缩放比例为%d", inSampleSize);
+                                    subscriber.onNext(new Point(options.outWidth / inSampleSize
+                                            , options.outHeight / inSampleSize));
+                                    subscriber.onCompleted();
+                                }
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(new Action1<Point>()
+                            {
+                                @Override
+                                public void call(Point point)
+                                {
+                                    Picasso.with(holder.mPhotoView.getContext())
+                                            .load(new File(model.mImgPath))
+                                            .resize(point.x, point.y)
+                                            .centerCrop()
+                                            .into(holder.mPhotoView, new Callback()
+                                            {
+                                                @Override
+                                                public void onSuccess()
+                                                {
+                                                    showBitmapInfo(holder.mPhotoView);
+                                                }
+
+                                                @Override
+                                                public void onError()
+                                                {
+
+                                                }
+                                            });
+                                }
+                            });
                 }
                 holder.mCheckBox.setChecked(model.mIsPick);
                 holder.mCheckBox.setOnClickListener(new View.OnClickListener()
@@ -277,6 +331,19 @@ public class ImageDetailActivity extends BaseActivity
             mPhotoView = (PhotoView) itemView.findViewById(R.id.item_img);
             mCheckBox = (CheckBox) itemView.findViewById(R.id.btnPick);
         }
+    }
 
+    private class Loader
+    {
+        String mImagePath;
+        Bitmap mBitmap;
+    }
+
+    private void showBitmapInfo(ImageView imageView)
+    {
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Logger.d("图片大小:%f,宽:%d,高:%d", (float) bitmap.getAllocationByteCount() / 1024 / 1024
+                , bitmap.getWidth(), bitmap.getHeight());
     }
 }

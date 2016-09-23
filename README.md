@@ -15,22 +15,44 @@
 
 ##### 用法如下:
 ```
+//开启选择图库
 LPick.getInstance()
                 .withPickCount(5) //最多选择图片
                 .withSpanCount(4) //配置列数
                 .pick(this,REQUEST_CODE);
+//开启裁剪
+ LPick.getInstance()
+                 .useSourceImageAspectRatio()
+                 .crop(PickImgSimpleActivity.this,Uri.fromFile(new File(model.mImgPath)),createUriSave());
+
 ```
 ```
 @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+protected void onActivityResult(int requestCode, int resultCode, Intent data)
+{
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK)
     {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK)
-        {
-            //获取到数据格式为 List<PickModel>
-            data.getParcelableArrayListExtra(Constances.PICK_SOUCRE_KEY);
-        }
+        //获取选择的图片
+        mPickModelList = data.getParcelableArrayListExtra(Constances.PICK_SOUCRE_KEY);
+        mAdapter.notifyDataSetChanged();
+    }else if (resultCode == RESULT_OK && requestCode == LPick.REQUEST_CROP)
+    {
+        //获取裁剪结果
+        Uri output = LPick.getOutput(data);
+        Logger.d("裁剪结果:" + output.getPath());
     }
+}
 ```
+#### 重要
+关于图片的压缩，因为没有相关的知识，所有都是按不超过最大尺寸，等比例缩放来压缩图片。如果有好建议，请提issues,谢谢
+```
+//小图最大尺寸
+public final static int MAX_THUMB_SIZE = 300;
+//大图最大尺寸
+public final static int MAX_BIG_SIZE = 800;
+```
+这个很完善的项目，如果用在项目上，可以试试这个[TelegramGallery](https://github.com/TangXiaoLv/TelegramGallery)
+
 
 ##### 项目还在更新中...
