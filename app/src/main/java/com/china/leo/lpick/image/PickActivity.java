@@ -388,7 +388,7 @@ public class PickActivity extends BaseActivity {
      */
     private void loadMoreData(String bucketId) {
         MediaUtils
-                .with(this)
+                .with(getApplicationContext())
                 .queryImageModel(mPager, mPagerSize, bucketId)
                 .doOnNext(new Action1<List<PickModel>>() {
                     @Override
