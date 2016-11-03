@@ -18,13 +18,13 @@
 ```
 //开启选择图库
 LPick.getInstance()
-                .withPickCount(5) //最多选择图片
-                .withSpanCount(4) //配置列数
-                .pick(this,REQUEST_CODE);
+     .withPickCount(5) //最多选择图片
+     .withSpanCount(4) //配置列数
+     .pick(this,REQUEST_CODE);
 //开启裁剪
  LPick.getInstance()
-                 .useSourceImageAspectRatio()
-                 .crop(PickImgSimpleActivity.this,Uri.fromFile(new File(model.mImgPath)),createUriSave());
+      .useSourceImageAspectRatio()
+      .crop(PickImgSimpleActivity.this,Uri.fromFile(new File(model.mImgPath)),createUriSave());
 
 ```
 ```
