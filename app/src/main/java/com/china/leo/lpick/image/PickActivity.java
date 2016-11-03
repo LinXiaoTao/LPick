@@ -74,8 +74,7 @@ import static com.china.leo.lpick.image.Constances.SPAN_COUNT_KEY;
  */
 
 @RuntimePermissions
-public class PickActivity extends BaseActivity
-{
+public class PickActivity extends BaseActivity {
     @BindView(R.id.txtTitle)
     TextView mTxtTitle;
     @BindView(R.id.btnOk)
@@ -104,35 +103,31 @@ public class PickActivity extends BaseActivity
 
 
     //加载更多
-    private OnMoreListener mOnMoreListener = new OnMoreListener()
-    {
+    private OnMoreListener mOnMoreListener = new OnMoreListener() {
         @Override
-        public void onMoreAsked(int overallItemsCount, int itemsBeforeMore, int maxLastVisiblePosition)
-        {
+        public void onMoreAsked(int overallItemsCount, int itemsBeforeMore, int maxLastVisiblePosition) {
             loadMoreData(mFolderId);
         }
     };
 
     //选择图片文件夹,通知更新
-    private FolderListDialog.OnNotifyDataCallback mNotifyDataCallback = new FolderListDialog.OnNotifyDataCallback()
-    {
+    private FolderListDialog.OnNotifyDataCallback mNotifyDataCallback = new FolderListDialog.OnNotifyDataCallback() {
         @Override
-        public void onNotifyData(String folderId, String title)
-        {
+        public void onNotifyData(String folderId, String title) {
             mBtnOpenFolder.setText(title);
             mImageSource.clear();
             addTakeImage();
             mPager = 1;
             mFolderId = folderId;
 
+            loadMoreData(mFolderId);
             //开启加载更多
             enableLoadingMore(true);
         }
     };
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState)
-    {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pick_img);
         ButterKnife.bind(this);
@@ -142,17 +137,14 @@ public class PickActivity extends BaseActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-    {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         PickActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @OnClick({R.id.btnClose, R.id.btnOk, R.id.btnOpenFolder})
-    public void onClick(View view)
-    {
-        switch (view.getId())
-        {
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.btnClose:
                 close();
                 break;
@@ -163,8 +155,7 @@ public class PickActivity extends BaseActivity
                 finish();
                 break;
             case R.id.btnOpenFolder:
-                if (mFolderListDialog != null)
-                {
+                if (mFolderListDialog != null) {
                     if (mIsShowDialog)
                         closeFolderDialog();
                     else
@@ -175,18 +166,13 @@ public class PickActivity extends BaseActivity
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK)
-        {
-            if (mSaveFile != null && mSaveFile.exists())
-            {
-                mMediaScanner.scanFile(mSaveFile.getAbsolutePath(), "image/jpeg", new MediaScanner.ScanCallback()
-                {
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            if (mSaveFile != null && mSaveFile.exists()) {
+                mMediaScanner.scanFile(mSaveFile.getAbsolutePath(), "image/jpeg", new MediaScanner.ScanCallback() {
                     @Override
-                    public void onScanCompleted(String[] images)
-                    {
+                    public void onScanCompleted(String[] images) {
                         PickModel data = new PickModel();
                         data.mIsPick = false;
                         data.mImgPath = mSaveFile.getAbsolutePath();
@@ -200,30 +186,24 @@ public class PickActivity extends BaseActivity
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         initFolderDialog();
         super.onResume();
     }
 
     @Override
-    protected void onDestroy()
-    {
-        if (mFolderListDialog != null)
-        {
-            if (mFolderListDialog.isShowing())
-                mFolderListDialog.dismiss();
+    protected void onDestroy() {
+        if (mFolderListDialog != null) {
+            mFolderListDialog.dismiss();
             mFolderListDialog = null;
         }
         super.onDestroy();
     }
 
     @Override
-    protected void handleBroadcast(Intent intent)
-    {
+    protected void handleBroadcast(Intent intent) {
         super.handleBroadcast(intent);
-        if (intent.getAction().equals(DETAIL_ACTION))
-        {
+        if (intent.getAction().equals(DETAIL_ACTION)) {
             List<PickModel> oldData = mPickImageAdapter.getSourceData();
             mImageSource = intent.getParcelableArrayListExtra(SOURCE_KEY);
             addTakeImage();
@@ -243,22 +223,18 @@ public class PickActivity extends BaseActivity
     ///////////////////////////////////////////////////////////////////////////
 
     @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-    void init()
-    {
+    void init() {
         getBuildConfig(getIntent().getExtras());
         initRecyclerView();
         mMediaScanner = new MediaScanner(this);
     }
 
     @OnPermissionDenied(Manifest.permission.READ_EXTERNAL_STORAGE)
-    void handleDeniedMessage()
-    {
+    void handleDeniedMessage() {
         Snackbar snackbar = Snackbar.make(mRecyclerView, "获取权限失败", Snackbar.LENGTH_SHORT);
-        snackbar.setCallback(new Snackbar.Callback()
-        {
+        snackbar.setCallback(new Snackbar.Callback() {
             @Override
-            public void onDismissed(Snackbar snackbar, int event)
-            {
+            public void onDismissed(Snackbar snackbar, int event) {
                 super.onDismissed(snackbar, event);
                 finish();
             }
@@ -267,23 +243,18 @@ public class PickActivity extends BaseActivity
     }
 
     @OnShowRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
-    void handleRationale(final PermissionRequest request)
-    {
+    void handleRationale(final PermissionRequest request) {
         new AlertDialog.Builder(this)
                 .setMessage("应用需要您的授权才能读取您的图库")
-                .setPositiveButton("授权", new DialogInterface.OnClickListener()
-                {
+                .setPositiveButton("授权", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                    public void onClick(DialogInterface dialog, int which) {
                         request.proceed();
                     }
                 })
-                .setNegativeButton("拒绝", new DialogInterface.OnClickListener()
-                {
+                .setNegativeButton("拒绝", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                    public void onClick(DialogInterface dialog, int which) {
                         request.cancel();
                     }
                 })
@@ -291,15 +262,12 @@ public class PickActivity extends BaseActivity
     }
 
     @OnNeverAskAgain(Manifest.permission.READ_EXTERNAL_STORAGE)
-    void handleNeverAskAgain()
-    {
+    void handleNeverAskAgain() {
         Snackbar snackbar = Snackbar
                 .make(mRecyclerView, "请在\"设置\"重置应用权限", Snackbar.LENGTH_SHORT);
-        snackbar.setCallback(new Snackbar.Callback()
-        {
+        snackbar.setCallback(new Snackbar.Callback() {
             @Override
-            public void onDismissed(Snackbar snackbar, int event)
-            {
+            public void onDismissed(Snackbar snackbar, int event) {
                 super.onDismissed(snackbar, event);
                 finish();
             }
@@ -313,20 +281,17 @@ public class PickActivity extends BaseActivity
     //
     ///////////////////////////////////////////////////////////////////////////
 
-    private void getBuildConfig(Bundle bundle)
-    {
+    private void getBuildConfig(Bundle bundle) {
         mMaxPickCount = bundle.getInt(MAX_PICK_COUNT_KEY, MAX_PICK_COUNT);
         mPagerSize = bundle.getInt(PAGER_SIZE_KEY, PAGER_SIZE);
         mSpanCount = bundle.getInt(SPAN_COUNT_KEY, SPAN_COUNT);
     }
 
-    private void close()
-    {
+    private void close() {
         finish();
     }
 
-    private void initRecyclerView()
-    {
+    private void initRecyclerView() {
         addTakeImage();
         mRecyclerView.setAdapter(mPickImageAdapter = new PickImageAdapter(mImageSource));
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, mSpanCount));
@@ -334,10 +299,8 @@ public class PickActivity extends BaseActivity
         mRecyclerView.setNumberBeforeMoreIsCalled(mSpanCount);
     }
 
-    private void initFolderDialog()
-    {
-        if (mFolderListDialog == null)
-        {
+    private void initFolderDialog() {
+        if (mFolderListDialog == null) {
             mFolderListDialog = new FolderListDialog(this);
             mFolderListDialog.setCallback(mNotifyDataCallback);
         }
@@ -350,48 +313,39 @@ public class PickActivity extends BaseActivity
      * @param oldData 旧数据源
      * @param newData 新数据源
      */
-    private void updateNotifyData(final List<PickModel> oldData, final List<PickModel> newData)
-    {
+    private void updateNotifyData(final List<PickModel> oldData, final List<PickModel> newData) {
         Observable
-                .create(new Observable.OnSubscribe<DiffUtil.DiffResult>()
-                {
+                .create(new Observable.OnSubscribe<DiffUtil.DiffResult>() {
 
                     @Override
-                    public void call(Subscriber<? super DiffUtil.DiffResult> subscriber)
-                    {
+                    public void call(Subscriber<? super DiffUtil.DiffResult> subscriber) {
                         subscriber.onNext(DiffUtil.calculateDiff(new PickDiffCallback(oldData, newData)));
                         subscriber.onCompleted();
                     }
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<DiffUtil.DiffResult>()
-                {
+                .subscribe(new Subscriber<DiffUtil.DiffResult>() {
                     @Override
-                    public void onCompleted()
-                    {
+                    public void onCompleted() {
                     }
 
                     @Override
-                    public void onError(Throwable e)
-                    {
+                    public void onError(Throwable e) {
                         mPickImageAdapter.setSourceData(newData);
                         mPickImageAdapter.notifyDataSetChanged();
                     }
 
                     @Override
-                    public void onNext(DiffUtil.DiffResult diffResult)
-                    {
+                    public void onNext(DiffUtil.DiffResult diffResult) {
                         mPickImageAdapter.setSourceData(newData);
                         diffResult.dispatchUpdatesTo(mPickImageAdapter);
                     }
                 });
     }
 
-    private void handlePickState(PickHolder holder, PickModel model)
-    {
-        if (mPickModelList.size() >= mMaxPickCount && !model.mIsPick)
-        {
+    private void handlePickState(PickHolder holder, PickModel model) {
+        if (mPickModelList.size() >= mMaxPickCount && !model.mIsPick) {
             holder.mCheckBox.setChecked(false);
             Snackbar.make(mRecyclerView, "已经达到最大数量了", Snackbar.LENGTH_SHORT)
                     .show();
@@ -402,20 +356,17 @@ public class PickActivity extends BaseActivity
         holder.mCheckBox.setChecked(model.mIsPick);
 
 
-        if (mPickModelList.contains(model) && !model.mIsPick)
-        {
+        if (mPickModelList.contains(model) && !model.mIsPick) {
             mPickModelList.remove(model);
         }
-        if (!mPickModelList.contains(model) && model.mIsPick)
-        {
+        if (!mPickModelList.contains(model) && model.mIsPick) {
             mPickModelList.add(model);
         }
 
         refreshButton();
     }
 
-    private void refreshButton()
-    {
+    private void refreshButton() {
         if (mPickModelList.size() > 0)
             mBtnOk.setText(String.format(PICK_COUNT_TEXT, mPickModelList.size(), mMaxPickCount));
         else
@@ -423,8 +374,7 @@ public class PickActivity extends BaseActivity
     }
 
     //添加拍照
-    private void addTakeImage()
-    {
+    private void addTakeImage() {
         PickModel takeModel = new PickModel();
         takeModel.mImgPath = "";
         takeModel.mIsPick = false;
@@ -436,28 +386,22 @@ public class PickActivity extends BaseActivity
      *
      * @param bucketId 文件夹id
      */
-    private void loadMoreData(String bucketId)
-    {
+    private void loadMoreData(String bucketId) {
         MediaUtils
                 .with(this)
                 .queryImageModel(mPager, mPagerSize, bucketId)
-                .doOnNext(new Action1<List<PickModel>>()
-                {
+                .doOnNext(new Action1<List<PickModel>>() {
                     @Override
-                    public void call(List<PickModel> pickModels)
-                    {
-                        if (pickModels == null || pickModels.isEmpty())
-                        {
+                    public void call(List<PickModel> pickModels) {
+                        if (pickModels == null || pickModels.isEmpty()) {
                             //关闭加载更多
                             enableLoadingMore(false);
                         }
                     }
                 })
-                .subscribe(new Subscriber<List<PickModel>>()
-                {
+                .subscribe(new Subscriber<List<PickModel>>() {
                     @Override
-                    public void onCompleted()
-                    {
+                    public void onCompleted() {
                         mPager++;
                         List<PickModel> oldData = mPickImageAdapter.getSourceData();
                         updateNotifyData(oldData, mImageSource);
@@ -465,22 +409,19 @@ public class PickActivity extends BaseActivity
                     }
 
                     @Override
-                    public void onError(Throwable e)
-                    {
+                    public void onError(Throwable e) {
                         closeLoadingMore();
                     }
 
                     @Override
-                    public void onNext(List<PickModel> pickModels)
-                    {
+                    public void onNext(List<PickModel> pickModels) {
                         mImageSource.addAll(pickModels);
                     }
                 });
     }
 
     //关闭加载更多
-    private void closeLoadingMore()
-    {
+    private void closeLoadingMore() {
         mRecyclerView.setLoadingMore(false);
         mRecyclerView.hideMoreProgress();
     }
@@ -490,10 +431,8 @@ public class PickActivity extends BaseActivity
      *
      * @param isEnable
      */
-    private void enableLoadingMore(boolean isEnable)
-    {
-        if (mRecyclerView != null)
-        {
+    private void enableLoadingMore(boolean isEnable) {
+        if (mRecyclerView != null) {
             if (!isEnable)
                 mRecyclerView.removeMoreListener();
             else
@@ -501,46 +440,38 @@ public class PickActivity extends BaseActivity
         }
     }
 
-    private void openFolderDialog()
-    {
+    private void openFolderDialog() {
         mFolderListDialog.show();
     }
 
-    private void closeFolderDialog()
-    {
+    private void closeFolderDialog() {
         mFolderListDialog.hide();
     }
 
-    private class PickImageAdapter extends RecyclerView.Adapter<PickHolder>
-    {
+    private class PickImageAdapter extends RecyclerView.Adapter<PickHolder> {
         private int mImageWidth = 0;
         private List<PickModel> mSourceData;
 
 
-        public PickImageAdapter(List<PickModel> source)
-        {
+        public PickImageAdapter(List<PickModel> source) {
             mImageWidth = getResources().getDisplayMetrics().widthPixels / SPAN_COUNT;
             mSourceData = new ArrayList<>(source);
         }
 
-        public List<PickModel> getSourceData()
-        {
+        public List<PickModel> getSourceData() {
             return mSourceData;
         }
 
-        public void setSourceData(List<PickModel> sourceData)
-        {
+        public void setSourceData(List<PickModel> sourceData) {
             mSourceData.clear();
             mSourceData.addAll(sourceData);
         }
 
         @Override
-        public PickHolder onCreateViewHolder(ViewGroup parent, int viewType)
-        {
+        public PickHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View rootView = ((LayoutInflater) parent.getContext().getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.item_pick_img, parent, false);
             PickHolder pickHolder = new PickHolder(rootView);
-            if (mImageWidth != 0)
-            {
+            if (mImageWidth != 0) {
                 ViewGroup.LayoutParams layoutParams = pickHolder.mImageView.getLayoutParams();
                 layoutParams.width = mImageWidth;
                 layoutParams.height = mImageWidth;
@@ -549,31 +480,24 @@ public class PickActivity extends BaseActivity
         }
 
         @Override
-        public void onBindViewHolder(final PickHolder holder, final int position, List<Object> payloads)
-        {
-            if (payloads == null || payloads.isEmpty())
-            {
+        public void onBindViewHolder(final PickHolder holder, final int position, List<Object> payloads) {
+            if (payloads == null || payloads.isEmpty()) {
                 super.onBindViewHolder(holder, position, payloads);
-            } else
-            {
-                try
-                {
+            } else {
+                try {
                     holder.mCheckBox
                             .setChecked(mPickModelList.contains(mSourceData.get(position)));
                     mSourceData.get(position)
                             .mIsPick = holder.mCheckBox.isChecked();
 
                     holder.mCheckBox
-                            .setOnClickListener(new View.OnClickListener()
-                            {
+                            .setOnClickListener(new View.OnClickListener() {
                                 @Override
-                                public void onClick(View v)
-                                {
+                                public void onClick(View v) {
                                     handlePickState(holder, mSourceData.get(position));
                                 }
                             });
-                } catch (Exception e)
-                {
+                } catch (Exception e) {
 
                     e.printStackTrace();
                 }
@@ -582,67 +506,56 @@ public class PickActivity extends BaseActivity
         }
 
         @Override
-        public void onBindViewHolder(final PickHolder holder, final int position)
-        {
-            if (mSourceData != null && mSourceData.size() > position)
-            {
+        public void onBindViewHolder(final PickHolder holder, final int position) {
+            if (mSourceData != null && mSourceData.size() > position) {
                 final PickModel pickModel = mSourceData.get(position);
-                if (!TextUtils.isEmpty(pickModel.mImgPath))
-                {
+                if (!TextUtils.isEmpty(pickModel.mImgPath)) {
                     holder.mImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        Observable
-                                .create(new Observable.OnSubscribe<Point>()
-                                {
-                                    @Override
-                                    public void call(Subscriber<? super Point> subscriber)
-                                    {
-                                        BitmapFactory.Options options = new BitmapFactory.Options();
-                                        options.inJustDecodeBounds = true;
-                                        BitmapFactory.decodeFile(pickModel.mImgPath, options);
+                    Observable
+                            .create(new Observable.OnSubscribe<Point>() {
+                                @Override
+                                public void call(Subscriber<? super Point> subscriber) {
+                                    BitmapFactory.Options options = new BitmapFactory.Options();
+                                    options.inJustDecodeBounds = true;
+                                    BitmapFactory.decodeFile(pickModel.mImgPath, options);
 //                                        Logger.d("原始图片大小:(%d,%d),%fMB", options.outWidth, options.outHeight
 //                                                , (float) options.outHeight * options.outWidth * 4 / 1024 / 1024);
-                                        int inSampleSize = BitmapLoadUtils.calculateInSampleSize(options
-                                                , Constances.MAX_THUMB_SIZE, Constances.MAX_THUMB_SIZE);
+                                    int inSampleSize = BitmapLoadUtils.calculateInSampleSize(options
+                                            , Constances.MAX_THUMB_SIZE, Constances.MAX_THUMB_SIZE);
 
 //                                        Logger.d("缩放比例为%d", inSampleSize);
-                                        subscriber.onNext(new Point(options.outWidth / inSampleSize
-                                                , options.outHeight / inSampleSize));
-                                        subscriber.onCompleted();
-                                    }
-                                })
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new Action1<Point>()
-                                {
-                                    @Override
-                                    public void call(Point point)
-                                    {
-                                        Picasso.with(holder.mImageView.getContext())
-                                                .load(new File(pickModel.mImgPath))
-                                                .resize(point.x, point.y)
-                                                .centerCrop()
-                                                .into(holder.mImageView, new Callback()
-                                                {
-                                                    @Override
-                                                    public void onSuccess()
-                                                    {
+                                    subscriber.onNext(new Point(options.outWidth / inSampleSize
+                                            , options.outHeight / inSampleSize));
+                                    subscriber.onCompleted();
+                                }
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(new Action1<Point>() {
+                                @Override
+                                public void call(Point point) {
+                                    Picasso.with(holder.mImageView.getContext())
+                                            .load(new File(pickModel.mImgPath))
+                                            .resize(point.x, point.y)
+                                            .centerCrop()
+                                            .into(holder.mImageView, new Callback() {
+                                                @Override
+                                                public void onSuccess() {
 //                                                        showBitmapInfo(holder.mImageView);
-                                                    }
+                                                }
 
-                                                    @Override
-                                                    public void onError()
-                                                    {
+                                                @Override
+                                                public void onError() {
 
-                                                    }
-                                                });
-                                    }
-                                });
+                                                }
+                                            });
+                                }
+                            });
 
                     holder.mCheckBox
                             .setVisibility(View.VISIBLE);
 
-                } else
-                {
+                } else {
                     holder.mImageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                     Picasso.with(holder.mImageView.getContext())
                             .load(R.mipmap.ic_camera)
@@ -658,27 +571,21 @@ public class PickActivity extends BaseActivity
                         .mIsPick = holder.mCheckBox.isChecked();
 
                 holder.mCheckBox
-                        .setOnClickListener(new View.OnClickListener()
-                        {
+                        .setOnClickListener(new View.OnClickListener() {
                             @Override
-                            public void onClick(View v)
-                            {
+                            public void onClick(View v) {
                                 handlePickState(holder, pickModel);
                             }
                         });
 
-                holder.itemView.setOnClickListener(new View.OnClickListener()
-                {
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v)
-                    {
-                        if (position == 0)
-                        {
+                    public void onClick(View v) {
+                        if (position == 0) {
                             //拍照
                             mSaveFile = CameraUtils
                                     .openCamera(PickActivity.this, REQUEST_CODE);
-                        } else
-                        {
+                        } else {
                             //大图
                             register(DETAIL_ACTION);
                             ArrayList<PickModel> data = new ArrayList<>(mImageSource);
@@ -694,28 +601,24 @@ public class PickActivity extends BaseActivity
         }
 
         @Override
-        public int getItemCount()
-        {
+        public int getItemCount() {
             return mSourceData.size();
         }
 
     }
 
-    private void showBitmapInfo(ImageView imageView)
-    {
+    private void showBitmapInfo(ImageView imageView) {
         BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Logger.d("图片大小:%f,宽:%d,高:%d", (float) bitmap.getAllocationByteCount() / 1024 / 1024
                 , bitmap.getWidth(), bitmap.getHeight());
     }
 
-    private class PickHolder extends RecyclerView.ViewHolder
-    {
+    private class PickHolder extends RecyclerView.ViewHolder {
         ImageView mImageView;
         CheckBox mCheckBox;
 
-        public PickHolder(View itemView)
-        {
+        public PickHolder(View itemView) {
             super(itemView);
             mImageView = (ImageView) itemView.findViewById(R.id.item_img);
             mCheckBox = (CheckBox) itemView.findViewById(R.id.item_checkbox);
