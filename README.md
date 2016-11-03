@@ -1,6 +1,7 @@
 # LPick
 #### 这是个多选图片选择器
-
+#### 效果图
+![LPick](https://github.com/LinXiaoTao/LPick/blob/master/gif/lpick.gif)
 ##### 感谢
 这个项目是基于[RxGalleryFinal](https://github.com/FinalTeam/RxGalleryFinal)的二次开发,使用到的开源项目如下:
 * [PermissionsDispatcher](https://github.com/hotchemi/PermissionsDispatcher) 处理动态权限申请
